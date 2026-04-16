@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.albion-online-data.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:openalbion.com)",
+      "WebFetch(domain:forum.albiononline.com)",
+      "WebFetch(domain:west.albion-online-data.com)"
+    ]
+  }
+}

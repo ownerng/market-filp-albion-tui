@@ -1,0 +1,56 @@
+{
+  "name": "market-flip-albion-tui",
+  "version": "0.1.0",
+  "description": "TUI para market flip en Albion Online (servidor Americas)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "market-flip": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/cli.tsx",
+    "start": "node dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src tests",
+    "format": "prettier --write src tests",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "reseed": "tsx scripts/reseed.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "11.5.0",
+    "date-fns": "4.1.0",
+    "drizzle-orm": "0.36.4",
+    "ink": "5.0.1",
+    "ink-spinner": "5.0.0",
+    "ink-table": "3.1.0",
+    "ink-text-input": "6.0.0",
+    "ink-use-stdout-dimensions": "1.0.5",
+    "meow": "13.2.0",
+    "p-queue": "8.0.1",
+    "pino": "9.5.0",
+    "pino-pretty": "11.2.2",
+    "react": "18.3.1",
+    "undici": "7.2.0",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.12",
+    "@types/node": "22.9.0",
+    "@types/react": "18.3.12",
+    "@typescript-eslint/eslint-plugin": "8.15.0",
+    "@typescript-eslint/parser": "8.15.0",
+    "drizzle-kit": "0.28.1",
+    "eslint": "9.15.0",
+    "ink-testing-library": "4.0.0",
+    "prettier": "3.3.3",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "vitest": "2.1.8"
+  }
+}
