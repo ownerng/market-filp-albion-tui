@@ -2,7 +2,7 @@ import PQueue from "p-queue";
 
 export const apiQueue = new PQueue({
   concurrency: 1,
-  intervalCap: 3,
+  intervalCap: 1,
   interval: 1000,
   carryoverConcurrencyCount: true,
 });

@@ -19,7 +19,7 @@ export interface RouteOptions {
 }
 
 export function computeBestRoutes(rows: PriceCacheRow[], opts: RouteOptions): Route[] {
-  const maxAge = opts.maxAgeMs ?? 2 * 60 * 60_000;
+  const maxAge = opts.maxAgeMs ?? 60 * 60_000;
   const now = Date.now();
   const valid = rows.filter((r) => now - r.updatedAt <= maxAge);
   const routes: Route[] = [];

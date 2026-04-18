@@ -15,11 +15,11 @@ export const items = sqliteTable(
     itemValue: integer("item_value").notNull(),
     shopCategory: text("shop_category").notNull(),
   },
-  (t) => ({
-    idxNormEs: index("idx_items_norm_es").on(t.normalizedEs),
-    idxNormEn: index("idx_items_norm_en").on(t.normalizedEn),
-    idxTier: index("idx_items_tier").on(t.tier, t.category),
-  }),
+  (t) => [
+    index("idx_items_norm_es").on(t.normalizedEs),
+    index("idx_items_norm_en").on(t.normalizedEn),
+    index("idx_items_tier").on(t.tier, t.category),
+  ],
 );
 
 export const priceCache = sqliteTable(
@@ -37,10 +37,10 @@ export const priceCache = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
     ttlSeconds: integer("ttl_seconds").notNull().default(300),
   },
-  (t) => ({
-    pk: primaryKey({ columns: [t.itemId, t.city, t.quality] }),
-    idxUpdatedAt: index("idx_price_updated").on(t.updatedAt),
-  }),
+  (t) => [
+    primaryKey({ columns: [t.itemId, t.city, t.quality] }),
+    index("idx_price_updated").on(t.updatedAt),
+  ],
 );
 
 export const investments = sqliteTable(
@@ -64,10 +64,10 @@ export const investments = sqliteTable(
     sellDate: integer("sell_date"),
     notes: text("notes"),
   },
-  (t) => ({
-    idxStatus: index("idx_inv_status").on(t.status),
-    idxItem: index("idx_inv_item").on(t.itemUniqueName),
-  }),
+  (t) => [
+    index("idx_inv_status").on(t.status),
+    index("idx_inv_item").on(t.itemUniqueName),
+  ],
 );
 
 export const settings = sqliteTable("settings", {

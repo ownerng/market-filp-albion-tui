@@ -5,7 +5,7 @@ import { SearchBar } from "./components/SearchBar.js";
 import { ItemList } from "./components/ItemList.js";
 import { PriceTable } from "./components/PriceTable.js";
 import { MarginPanel } from "./components/MarginPanel.js";
-import { InvestmentList } from "./components/InvestmentList.js";
+import { TopFlips } from "./components/TopFlips.js";
 import { SettingsPanel } from "./components/SettingsPanel.js";
 import { HelpOverlay } from "./components/HelpOverlay.js";
 import { useItems } from "./hooks/useItems.js";
@@ -18,19 +18,25 @@ import type { ItemRow } from "./db/schema.js";
 import type { AppSettings } from "./types/settings.js";
 import { logger } from "./lib/logger.js";
 
-type View = "main" | "investments" | "settings";
-type Focus = "search" | "list" | "margins";
+type View = "main" | "flips" | "settings";
+type Focus = "search" | "list" | "pricesBuy" | "pricesSell" | "margins";
+const FOCUS_CYCLE: Focus[] = ["search", "list", "pricesBuy", "pricesSell", "margins"];
 
 function Header({ view, settings }: { view: View; settings: AppSettings }) {
   const fees = settings.premiumStatus ? "2.5% + 4%" : "2.5% + 8%";
   return (
     <Box borderStyle="round" borderColor="cyan" paddingX={1}>
-      <Text bold color="cyan">Market Flip </Text>
+      <Text bold color="cyan">
+        Market Flip{" "}
+      </Text>
       <Text>| {settings.serverRegion} | Premium: </Text>
       <Text color={settings.premiumStatus ? "green" : "red"}>
         {settings.premiumStatus ? "ON" : "OFF"}
       </Text>
-      <Text> | {settings.uiLanguage.toUpperCase()} | Fees: {fees} | Vista: </Text>
+      <Text>
+        {" "}
+        | {settings.uiLanguage.toUpperCase()} | Fees: {fees} | Vista:{" "}
+      </Text>
       <Text color="yellow">{view}</Text>
     </Box>
   );
@@ -40,7 +46,8 @@ function Footer() {
   return (
     <Box borderStyle="round" borderColor="gray" paddingX={1}>
       <Text dimColor>
-        [1]Main [2]Inv [3]Settings [/]Buscar [Tab]Ciclar foco [←→]Tier [L]Idioma [P]Premium [?]Ayuda [Q]Salir
+        [1]Main [2]Flips [3]Settings [/]Buscar [Tab]Ciclar foco [←→]Tier [L]Idioma [P]Premium
+        [?]Ayuda [Q]Salir
       </Text>
     </Box>
   );
@@ -95,6 +102,10 @@ function MainView({
   onSelectItem,
   refreshKey,
   listRows,
+  itemListWidth,
+  priceVisibleRows,
+  marginVisibleRows,
+  compact,
 }: {
   focus: Focus;
   settings: AppSettings;
@@ -102,11 +113,19 @@ function MainView({
   onSelectItem: (item: ItemRow) => void;
   refreshKey: number;
   listRows: number;
+  itemListWidth: number;
+  priceVisibleRows: number;
+  marginVisibleRows: number;
+  compact: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<number | null>(null);
   const { results, loading } = useItems(query, tierFilter);
-  const { rows, loading: pricesLoading, error } = usePrices({
+  const {
+    rows,
+    loading: pricesLoading,
+    error,
+  } = usePrices({
     itemId: selected?.uniqueName ?? null,
     quality: settings.defaultQuality,
     settings,
@@ -128,7 +147,7 @@ function MainView({
         placeholder={loading ? "buscando…" : undefined}
       />
       <Box flexGrow={1} flexDirection="row" overflow="hidden">
-        <Box width={36} flexDirection="column" flexShrink={0}>
+        <Box width={itemListWidth} flexDirection="column" flexShrink={0}>
           <ItemList
             items={results}
             lang={settings.uiLanguage}
@@ -142,21 +161,38 @@ function MainView({
         <Box flexGrow={1} flexDirection="column" flexShrink={1} overflow="hidden">
           {selected ? (
             <>
-              <Box paddingX={1} flexWrap="wrap">
+              <Box paddingX={1}>
                 <Text bold wrap="truncate">
                   {`T${selected.tier} ${selectedLabel}${selected.enchant > 0 ? ` .${selected.enchant}` : ""}`}
                 </Text>
-                <Text dimColor wrap="truncate"> ({selected.uniqueName})</Text>
+                <Text dimColor wrap="truncate">
+                  {" "}
+                  ({selected.uniqueName})
+                </Text>
                 {pricesLoading && <Text color="cyan"> — cargando…</Text>}
                 {error && <Text color="red"> — {error}</Text>}
               </Box>
-              <PriceTable rows={rows} mode="buy" />
-              <PriceTable rows={rows} mode="sell" />
+              <PriceTable
+                rows={rows}
+                mode="buy"
+                focused={focus === "pricesBuy"}
+                visibleRows={priceVisibleRows}
+                compact={compact}
+              />
+              <PriceTable
+                rows={rows}
+                mode="sell"
+                focused={focus === "pricesSell"}
+                visibleRows={priceVisibleRows}
+                compact={compact}
+              />
               <MarginPanel
                 rows={rows}
                 isPremium={settings.premiumStatus}
                 setupFeeRate={settings.setupFeeRate}
                 focused={focus === "margins"}
+                visibleRows={marginVisibleRows}
+                compact={compact}
               />
             </>
           ) : (
@@ -170,8 +206,8 @@ function MainView({
   );
 }
 
-function InvestmentsView({ focused }: { focused: boolean }) {
-  return <InvestmentList focused={focused} />;
+function FlipsView({ focused, settings }: { focused: boolean; settings: AppSettings }) {
+  return <TopFlips focused={focused} settings={settings} />;
 }
 
 function SettingsView({
@@ -215,7 +251,10 @@ export function App() {
       return;
     }
     if (key.tab) {
-      setFocus((f) => (f === "search" ? "list" : f === "list" ? "margins" : "search"));
+      setFocus((f) => {
+        const idx = FOCUS_CYCLE.indexOf(f);
+        return FOCUS_CYCLE[(idx + 1) % FOCUS_CYCLE.length] ?? "search";
+      });
       return;
     }
     if (key.escape) {
@@ -232,7 +271,7 @@ export function App() {
       return;
     }
     if (input === "1") setView("main");
-    if (input === "2") setView("investments");
+    if (input === "2") setView("flips");
     if (input === "3") setView("settings");
     if (input === "l" || input === "L") {
       if (!settings) return;
@@ -253,8 +292,12 @@ export function App() {
   if (columns < 60 || rows < 12) {
     return (
       <Box padding={1} flexDirection="column">
-        <Text color="yellow" bold>Terminal muy chica</Text>
-        <Text dimColor>Actual: {columns}×{rows} · mínimo 60×12</Text>
+        <Text color="yellow" bold>
+          Terminal muy chica
+        </Text>
+        <Text dimColor>
+          Actual: {columns}×{rows} · mínimo 60×12
+        </Text>
       </Box>
     );
   }
@@ -284,10 +327,19 @@ export function App() {
     return <HelpOverlay onClose={() => setShowHelp(false)} />;
   }
 
+  const compact = columns < 120;
+  const itemListWidth = compact ? 28 : 36;
+
   const headerRows = 3;
   const searchRows = view === "main" ? 3 : 0;
   const footerRows = 3;
   const listInner = Math.max(3, rows - headerRows - searchRows - footerRows - 3);
+
+  // Distribute right panel height across 3 panels (2 price tables + margin)
+  const rightContentRows = Math.max(12, rows - headerRows - searchRows - footerRows - 1);
+  const rawVR = Math.floor((rightContentRows - 12) / 3);
+  const priceVisibleRows = Math.min(8, Math.max(2, rawVR));
+  const marginVisibleRows = Math.max(2, rightContentRows - 2 * (priceVisibleRows + 4) - 4);
 
   return (
     <Box flexDirection="column" width={columns} height={rows}>
@@ -300,11 +352,19 @@ export function App() {
           onSelectItem={setSelectedItem}
           refreshKey={refreshKey}
           listRows={listInner}
+          itemListWidth={itemListWidth}
+          priceVisibleRows={priceVisibleRows}
+          marginVisibleRows={marginVisibleRows}
+          compact={compact}
         />
       )}
-      {view === "investments" && <InvestmentsView focused={view === "investments"} />}
+      {view === "flips" && <FlipsView focused={view === "flips"} settings={settings} />}
       {view === "settings" && (
-        <SettingsView settings={settings} onChange={refreshSettings} focused={view === "settings"} />
+        <SettingsView
+          settings={settings}
+          onChange={refreshSettings}
+          focused={view === "settings"}
+        />
       )}
       <Footer />
     </Box>

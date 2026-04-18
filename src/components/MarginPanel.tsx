@@ -10,11 +10,12 @@ interface Props {
   setupFeeRate: number;
   focused?: boolean;
   visibleRows?: number;
+  compact?: boolean;
 }
 
 type Entry = { kind: "row"; data: Route; loss: boolean } | { kind: "sep"; label: string };
 
-export function MarginPanel({ rows, isPremium, setupFeeRate, focused = false, visibleRows = 6 }: Props) {
+export function MarginPanel({ rows, isPremium, setupFeeRate, focused = false, visibleRows = 6, compact = false }: Props) {
   const [offset, setOffset] = useState(0);
   const allRoutes = computeBestRoutes(rows, { isPremium, setupFeeRate, topN: 9999 });
   const profitable = allRoutes.filter((r) => r.profitPerUnit > 0).slice(0, 5);
@@ -72,13 +73,13 @@ export function MarginPanel({ rows, isPremium, setupFeeRate, focused = false, vi
       ) : (
         <>
           <Box>
-            <Box width={6}><Text dimColor>Tipo</Text></Box>
-            <Box width={24}><Text dimColor>Ruta</Text></Box>
-            <Box width={10}><Text dimColor>Buy</Text></Box>
-            <Box width={10}><Text dimColor>Sell</Text></Box>
-            <Box width={10}><Text dimColor>Neto</Text></Box>
-            <Box width={9}><Text dimColor>ROI</Text></Box>
-            <Box width={8}><Text dimColor>Edad</Text></Box>
+            <Box width={compact ? 4 : 6}><Text dimColor wrap="truncate">Tip</Text></Box>
+            <Box width={compact ? 14 : 24}><Text dimColor wrap="truncate">Ruta</Text></Box>
+            <Box width={compact ? 8 : 10}><Text dimColor wrap="truncate">Buy</Text></Box>
+            <Box width={compact ? 8 : 10}><Text dimColor wrap="truncate">Sell</Text></Box>
+            <Box width={compact ? 7 : 10}><Text dimColor wrap="truncate">Neto</Text></Box>
+            <Box width={compact ? 6 : 9}><Text dimColor wrap="truncate">ROI</Text></Box>
+            {!compact && <Box width={8}><Text dimColor>Edad</Text></Box>}
           </Box>
           {visible.map((e, i) =>
             e.kind === "sep" ? (
@@ -87,28 +88,30 @@ export function MarginPanel({ rows, isPremium, setupFeeRate, focused = false, vi
               </Box>
             ) : (
               <Box key={`row-${offset + i}`}>
-                <Box width={6}>
-                  <Text color={e.loss ? "red" : "green"}>{e.loss ? "LOSS" : "OK"}</Text>
+                <Box width={compact ? 4 : 6}>
+                  <Text color={e.loss ? "red" : "green"} wrap="truncate">{e.loss ? "LOSS" : "OK"}</Text>
                 </Box>
-                <Box width={24}>
+                <Box width={compact ? 14 : 24}>
                   <Text wrap="truncate">{`${e.data.buyCity} → ${e.data.sellCity}`}</Text>
                 </Box>
-                <Box width={10}><Text>{formatSilver(e.data.buyPrice)}</Text></Box>
-                <Box width={10}><Text>{formatSilver(e.data.sellPrice)}</Text></Box>
-                <Box width={10}>
-                  <Text color={e.data.profitPerUnit > 0 ? "green" : "red"}>
+                <Box width={compact ? 8 : 10}><Text wrap="truncate">{formatSilver(e.data.buyPrice)}</Text></Box>
+                <Box width={compact ? 8 : 10}><Text wrap="truncate">{formatSilver(e.data.sellPrice)}</Text></Box>
+                <Box width={compact ? 7 : 10}>
+                  <Text color={e.data.profitPerUnit > 0 ? "green" : "red"} wrap="truncate">
                     {e.data.profitPerUnit > 0 ? "+" : ""}
                     {formatSilver(Math.round(e.data.profitPerUnit))}
                   </Text>
                 </Box>
-                <Box width={9}>
-                  <Text color={e.data.roiPct >= 20 ? "green" : e.data.roiPct >= 0 ? "yellow" : "red"}>
+                <Box width={compact ? 6 : 9}>
+                  <Text color={e.data.roiPct >= 20 ? "green" : e.data.roiPct >= 0 ? "yellow" : "red"} wrap="truncate">
                     {formatPercent(e.data.roiPct)}
                   </Text>
                 </Box>
-                <Box width={8}>
-                  <Text dimColor>{formatAge(Date.now() - e.data.ageMs)}</Text>
-                </Box>
+                {!compact && (
+                  <Box width={8}>
+                    <Text dimColor>{formatAge(Date.now() - e.data.ageMs)}</Text>
+                  </Box>
+                )}
               </Box>
             ),
           )}

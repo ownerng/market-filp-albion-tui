@@ -1,4 +1,4 @@
-import { request } from "undici";
+import { fetch } from "undici";
 import { bulkInsertItems, countItems, type InsertItemInput } from "./queries/items.js";
 import { setSetting } from "./queries/settings.js";
 import { ALLOWED_TIERS, ALLOWED_ENCHANTS } from "../constants/tiers.js";
@@ -22,11 +22,11 @@ export interface SeedResult {
 
 export async function fetchItemsJson(url = ITEMS_URL): Promise<RawItem[]> {
   logger.info({ url }, "Descargando items.json");
-  const res = await request(url, { method: "GET", maxRedirections: 5 });
-  if (res.statusCode !== 200) {
-    throw new Error(`HTTP ${res.statusCode} descargando items.json`);
+  const res = await fetch(url, { method: "GET", redirect: "follow" });
+  if (res.status !== 200) {
+    throw new Error(`HTTP ${res.status} descargando items.json`);
   }
-  const raw = (await res.body.json()) as unknown;
+  const raw = (await res.json()) as unknown;
   if (!Array.isArray(raw)) throw new Error("items.json no es un array");
   return raw as RawItem[];
 }

@@ -13,5 +13,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   serverRegion: "americas",
   defaultQuality: 1,
   setupFeeRate: 0.025,
-  cacheTtlSeconds: 300,
+  cacheTtlSeconds: 3600,
 };

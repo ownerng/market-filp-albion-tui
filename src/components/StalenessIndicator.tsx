@@ -13,10 +13,10 @@ export function StalenessIndicator({ updatedAt }: Props) {
   let color: "green" | "yellow" | "redBright" | "red" = "green";
   let suffix = "";
   if (min >= 5 && min < 30) color = "yellow";
-  else if (min >= 30 && min < 120) {
+  else if (min >= 30 && min < 60) {
     color = "redBright";
     suffix = " !";
-  } else if (min >= 120) {
+  } else if (min >= 60) {
     color = "red";
     suffix = " !!";
   }

@@ -9,32 +9,30 @@ export function countItems(): number {
 
 const ITEM_SELECT = `SELECT unique_name AS uniqueName, localized_es AS localizedEs, localized_en AS localizedEn, normalized_es AS normalizedEs, normalized_en AS normalizedEn, tier, enchant, category, subcategory, item_value AS itemValue, shop_category AS shopCategory FROM items`;
 
-export function searchItems(query: string, limit = 500, tier: number | null = null): ItemRow[] {
+export function searchItems(query: string, limit = 0, tier: number | null = null): ItemRow[] {
   const db = rawDb();
   const q = normalize(query);
   const tierClause = tier !== null ? "tier = ?" : null;
   const tierParams = tier !== null ? [tier] : [];
+  const limitSql = limit > 0 ? " LIMIT ?" : "";
+  const limitParam = limit > 0 ? [limit] : [];
 
   if (q === "") {
     const where = tierClause ? ` WHERE ${tierClause}` : "";
     return db
-      .prepare(
-        `${ITEM_SELECT}${where} ORDER BY tier ASC, enchant ASC, localized_es ASC LIMIT ?`,
-      )
-      .all(...tierParams, limit) as ItemRow[];
+      .prepare(`${ITEM_SELECT}${where} ORDER BY tier ASC, enchant ASC, localized_es ASC${limitSql}`)
+      .all(...tierParams, ...limitParam) as ItemRow[];
   }
   const like = `%${q}%`;
   const searchWhere = `(normalized_es LIKE ? OR normalized_en LIKE ? OR LOWER(unique_name) LIKE ?)`;
   const where = tierClause ? `${searchWhere} AND ${tierClause}` : searchWhere;
-  const rows = db
+  return db
     .prepare(
       `${ITEM_SELECT}
        WHERE ${where}
-       ORDER BY tier ASC, enchant ASC, localized_es ASC
-       LIMIT ?`,
+       ORDER BY tier ASC, enchant ASC, localized_es ASC${limitSql}`,
     )
-    .all(like, like, like, ...tierParams, limit) as ItemRow[];
-  return rows;
+    .all(like, like, like, ...tierParams, ...limitParam) as ItemRow[];
 }
 
 export function findByUniqueName(uniqueName: string): ItemRow | null {
